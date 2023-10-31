@@ -5,15 +5,6 @@ resource "aws_s3_bucket" "this" {
   tags                = var.tags
 }
 
-resource "aws_s3_bucket_public_access_block" "this" {
-  count                   = var.public_block_config != null ? 1 : 0
-  bucket                  = aws_s3_bucket.this.id
-  block_public_acls       = var.public_block_config.public_acls != null ? var.public_block_config.public_acls : true
-  block_public_policy     = var.public_block_config.public_policy != null ? var.public_block_config.public_policy : true
-  ignore_public_acls      = var.public_block_config.public_acls_ignore != null ? var.public_block_config.public_acls_ignore : true
-  restrict_public_buckets = var.public_block_config.public_restrict != null ? var.public_block_config.public_restrict : true
-}
-
 resource "aws_s3_bucket_logging" "this" {
   count         = var.access_log_config != null ? 1 : 0
   bucket        = aws_s3_bucket.this.id
@@ -21,9 +12,33 @@ resource "aws_s3_bucket_logging" "this" {
   target_prefix = var.access_log_config.target_prefix
 }
 
+resource "aws_s3_bucket_metric" "this" {
+  for_each = var.metric_config != null ? { for idx, config in var.metric_config : idx => config } : {}
+
+  bucket = aws_s3_bucket.this.id
+  name   = each.value.metric_name
+
+  dynamic "filter" {
+    for_each = (try(length(each.value.prefix), 0) > 0 || try(length(each.value.tags), 0) > 0) ? [each.value] : []
+    content {
+      prefix = filter.value.prefix
+      tags   = filter.value.tags
+    }
+  }
+}
+
 resource "aws_s3_bucket_policy" "policy" {
   bucket = aws_s3_bucket.this.id
   policy = var.bucket_policy != null ? var.bucket_policy : data.aws_iam_policy_document.bucket_policy.json
+}
+
+resource "aws_s3_bucket_public_access_block" "this" {
+  count                   = var.public_block_config != null ? 1 : 0
+  bucket                  = aws_s3_bucket.this.id
+  block_public_acls       = var.public_block_config.public_acls != null ? var.public_block_config.public_acls : true
+  block_public_policy     = var.public_block_config.public_policy != null ? var.public_block_config.public_policy : true
+  ignore_public_acls      = var.public_block_config.public_acls_ignore != null ? var.public_block_config.public_acls_ignore : true
+  restrict_public_buckets = var.public_block_config.public_restrict != null ? var.public_block_config.public_restrict : true
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
@@ -44,17 +59,3 @@ resource "aws_s3_bucket_versioning" "this" {
   }
 }
 
-resource "aws_s3_bucket_metric" "this" {
-  for_each = var.metric_config != null ? { for idx, config in var.metric_config : idx => config } : {}
-
-  bucket = aws_s3_bucket.this.id
-  name   = each.value.metric_name
-
-  dynamic "filter" {
-    for_each = (try(length(each.value.prefix), 0) > 0 || try(length(each.value.tags), 0) > 0) ? [each.value] : []
-    content {
-      prefix = filter.value.prefix
-      tags   = filter.value.tags
-    }
-  }
-}
