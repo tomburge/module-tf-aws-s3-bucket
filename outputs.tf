@@ -14,12 +14,12 @@ output "bucket_policy_id" {
 }
 
 output "logging_target_bucket" {
-  value       = aws_s3_bucket_logging.this.target_bucket
+  value       = aws_s3_bucket_logging.this[0].target_bucket
   description = "The S3 bucket where logging is stored."
 }
 
 output "logging_target_prefix" {
-  value       = aws_s3_bucket_logging.this.target_prefix
+  value       = aws_s3_bucket_logging.this[0].target_prefix
   description = "The prefix applied to log objects."
 }
 
