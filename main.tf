@@ -14,10 +14,8 @@ resource "aws_s3_bucket_logging" "this" {
 
 resource "aws_s3_bucket_metric" "this" {
   for_each = var.metric_config != null ? { for idx, config in var.metric_config : idx => config } : {}
-
-  bucket = aws_s3_bucket.this.id
-  name   = each.value.metric_name
-
+  bucket   = aws_s3_bucket.this.id
+  name     = each.value.metric_name
   dynamic "filter" {
     for_each = (try(length(each.value.prefix), 0) > 0 || try(length(each.value.tags), 0) > 0) ? [each.value] : []
     content {

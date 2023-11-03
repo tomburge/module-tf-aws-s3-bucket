@@ -8,63 +8,63 @@ data "aws_kms_alias" "s3_key" {
 
 data "aws_iam_policy_document" "bucket_policy" {
   statement {
-    sid    = "AllowSSLRequestsOnly"
-    effect = "Deny"
+    sid = "AllowSSLRequestsOnly"
     actions = [
       "s3:*",
     ]
+    effect = "Deny"
     resources = [
       aws_s3_bucket.this.arn,
       "${aws_s3_bucket.this.arn}/*",
     ]
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
-    }
     condition {
       test     = "Bool"
       variable = "aws:SecureTransport"
       values   = ["false"]
     }
-  }
-  statement {
-    sid    = "DenyIncorrectEncryptionHeader"
-    effect = "Deny"
-    actions = [
-      "s3:PutObject",
-    ]
-    resources = [
-      aws_s3_bucket.this.arn,
-      "${aws_s3_bucket.this.arn}/*",
-    ]
     principals {
       type        = "AWS"
       identifiers = ["*"]
     }
+  }
+  statement {
+    sid = "DenyIncorrectEncryptionHeader"
+    actions = [
+      "s3:PutObject",
+    ]
+    effect = "Deny"
+    resources = [
+      aws_s3_bucket.this.arn,
+      "${aws_s3_bucket.this.arn}/*",
+    ]
     condition {
       test     = "StringNotEquals"
       variable = "s3:x-amz-server-side-encryption"
       values   = ["AES256"]
     }
-  }
-  statement {
-    sid    = "DenyUnEncryptedObjectUploads"
-    effect = "Deny"
-    actions = [
-      "s3:PutObject",
-    ]
-    resources = [
-      aws_s3_bucket.this.arn,
-      "${aws_s3_bucket.this.arn}/*",
-    ]
     principals {
       type        = "AWS"
       identifiers = ["*"]
     }
+  }
+  statement {
+    sid = "DenyUnEncryptedObjectUploads"
+    actions = [
+      "s3:PutObject",
+    ]
+    effect = "Deny"
+    resources = [
+      aws_s3_bucket.this.arn,
+      "${aws_s3_bucket.this.arn}/*",
+    ]
     condition {
       test     = "Null"
       variable = "s3:x-amz-server-side-encryption"
       values   = ["true"]
+    }
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
     }
   }
 }
