@@ -1,4 +1,4 @@
-# module-tf-aws-s3-bucket-readme
+# module-tf-aws-s3-bucket
 
 ## What does this module do?
 
