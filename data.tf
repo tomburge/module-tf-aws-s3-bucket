@@ -40,7 +40,8 @@ data "aws_iam_policy_document" "bucket_policy" {
     condition {
       test     = "StringNotEquals"
       variable = "s3:x-amz-server-side-encryption"
-      values   = ["AES256"]
+      values   = [var.kms_key_config.algorithm]
+      # values   = ["AES256"]
     }
     principals {
       type        = "AWS"
