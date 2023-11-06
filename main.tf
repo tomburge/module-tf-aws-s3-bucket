@@ -29,8 +29,8 @@ resource "aws_s3_bucket_policy" "policy" {
   bucket = aws_s3_bucket.this.id
   # policy = var.bucket_policy != null ? var.bucket_policy : (
   #   var.kms_key_config.key_arn != null )
-  policy = var.bucket_policy != "" ? var.bucket_policy : (
-    var.kms_key_config.key_arn != "" ? data.aws_iam_policy_document.kms_encryption.json :
+  policy = var.bucket_policy != null ? var.bucket_policy : (
+    var.kms_key_config.key_arn != null ? data.aws_iam_policy_document.kms_encryption.json :
     data.aws_iam_policy_document.default_encryption.json
   )
 }
