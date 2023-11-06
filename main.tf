@@ -27,7 +27,12 @@ resource "aws_s3_bucket_metric" "this" {
 
 resource "aws_s3_bucket_policy" "policy" {
   bucket = aws_s3_bucket.this.id
-  policy = var.bucket_policy != null ? var.bucket_policy : data.aws_iam_policy_document.bucket_policy.json
+  # policy = var.bucket_policy != null ? var.bucket_policy : (
+  #   var.kms_key_config.key_arn != null )
+  policy = var.bucket_policy != "" ? var.bucket_policy : (
+    var.kms_key_config.key_arn != "" ? data.aws_iam_policy_document.s3_kms_encryption.json :
+    data.aws_iam_policy_document.s3_default_encryption.json
+  )
 }
 
 resource "aws_s3_bucket_public_access_block" "this" {
@@ -44,7 +49,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
   rule {
     apply_server_side_encryption_by_default {
       kms_master_key_id = var.kms_key_config != null ? var.kms_key_config.key_arn : data.aws_kms_alias.s3_key.arn
-      sse_algorithm     = var.kms_key_config != null ? var.kms_key_config.algorithm : "aws:kms"
+      # sse_algorithm     = var.kms_key_config != null ? var.kms_key_config.algorithm : "AES256"
+      sse_algorithm = var.kms_key_config.key_arn != "" ? "aws:kms" : "AES256"
     }
     bucket_key_enabled = var.kms_key_config != null ? var.kms_key_config.bucket_key : true
   }
