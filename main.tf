@@ -25,12 +25,20 @@ resource "aws_s3_bucket_metric" "this" {
   }
 }
 
+# resource "aws_s3_bucket_policy" "policy" {
+#   bucket = aws_s3_bucket.this.id
+#   # policy = var.bucket_policy != null ? var.bucket_policy : (
+#   #   var.kms_key_config.key_arn != null )
+#   policy = var.bucket_policy != null ? var.bucket_policy : (
+#     var.kms_key_config.key_arn != null ? data.aws_iam_policy_document.kms_encryption.json :
+#     data.aws_iam_policy_document.default_encryption.json
+#   )
+# }
+
 resource "aws_s3_bucket_policy" "policy" {
   bucket = aws_s3_bucket.this.id
-  # policy = var.bucket_policy != null ? var.bucket_policy : (
-  #   var.kms_key_config.key_arn != null )
   policy = var.bucket_policy != null ? var.bucket_policy : (
-    var.kms_key_config.key_arn != null ? data.aws_iam_policy_document.kms_encryption.json :
+    var.kms_key_config != null && var.kms_key_config.key_arn != null ? data.aws_iam_policy_document.kms_encryption.json :
     data.aws_iam_policy_document.default_encryption.json
   )
 }
@@ -44,15 +52,42 @@ resource "aws_s3_bucket_public_access_block" "this" {
   restrict_public_buckets = var.public_block_config.public_restrict != null ? var.public_block_config.public_restrict : true
 }
 
+# resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
+#   bucket = aws_s3_bucket.this.id
+#   rule {
+#     apply_server_side_encryption_by_default {
+#       kms_master_key_id = var.kms_key_config != null ? var.kms_key_config.key_arn : data.aws_kms_alias.s3_key.arn
+#       # sse_algorithm     = var.kms_key_config != null ? var.kms_key_config.algorithm : "AES256"
+#       sse_algorithm = var.kms_key_config.key_arn != "" ? "aws:kms" : "AES256"
+#     }
+#     bucket_key_enabled = var.kms_key_config != null ? var.kms_key_config.bucket_key : true
+#   }
+# }
+
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
   bucket = aws_s3_bucket.this.id
-  rule {
-    apply_server_side_encryption_by_default {
-      kms_master_key_id = var.kms_key_config != null ? var.kms_key_config.key_arn : data.aws_kms_alias.s3_key.arn
-      # sse_algorithm     = var.kms_key_config != null ? var.kms_key_config.algorithm : "AES256"
-      sse_algorithm = var.kms_key_config.key_arn != "" ? "aws:kms" : "AES256"
+
+  dynamic "rule" {
+    for_each = var.kms_key_config != null ? [1] : []
+
+    content {
+      apply_server_side_encryption_by_default {
+        kms_master_key_id = var.kms_key_config.key_arn
+        sse_algorithm     = "aws:kms"
+      }
+      bucket_key_enabled = lookup(var.kms_key_config, "bucket_key", true)
     }
-    bucket_key_enabled = var.kms_key_config != null ? var.kms_key_config.bucket_key : true
+  }
+
+  dynamic "rule" {
+    for_each = var.kms_key_config == null ? [1] : []
+
+    content {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+      bucket_key_enabled = true
+    }
   }
 }
 
