@@ -41,7 +41,7 @@ data "aws_iam_policy_document" "default_encryption" {
     condition {
       test     = "StringNotEquals"
       variable = "s3:x-amz-server-side-encryption"
-      values   = "AES256"
+      values   = ["AES256"]
     }
     principals {
       type        = "AWS"
@@ -106,12 +106,12 @@ data "aws_iam_policy_document" "kms_encryption" {
     condition {
       test     = "StringNotEquals"
       variable = "s3:x-amz-server-side-encryption"
-      values   = "aws:kms"
+      values   = ["aws:kms"]
     }
     condition {
       test     = "StringNotEquals"
       variable = "s3:x-amz-server-side-encryption-aws-kms-key-id"
-      values   = var.kms_key_config.key_arn
+      values   = [var.kms_key_config.key_arn]
     }
     principals {
       type        = "AWS"
