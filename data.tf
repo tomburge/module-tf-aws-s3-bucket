@@ -135,7 +135,7 @@ data "aws_iam_policy_document" "kms_encryption" {
     condition {
       test     = "StringNotEquals"
       variable = "s3:x-amz-server-side-encryption"
-      values   = "aws:kms"
+      values   = ["aws:kms"]
     }
     condition {
       test     = "StringNotEquals"
