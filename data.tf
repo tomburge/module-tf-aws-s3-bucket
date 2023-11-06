@@ -140,7 +140,7 @@ data "aws_iam_policy_document" "kms_encryption" {
     condition {
       test     = "StringNotEquals"
       variable = "s3:x-amz-server-side-encryption-aws-kms-key-id"
-      values   = var.kms_key_config.key_arn
+      values   = [var.kms_key_config.key_arn]
     }
     principals {
       type        = "AWS"
