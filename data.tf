@@ -122,29 +122,32 @@ data "aws_iam_policy_document" "kms_encryption" {
     }
   }
 
-  statement {
-    sid = "DenyUnEncryptedObjectUploads"
-    actions = [
-      "s3:PutObject",
-    ]
-    effect = "Deny"
-    resources = [
-      aws_s3_bucket.this.arn,
-      "${aws_s3_bucket.this.arn}/*",
-    ]
-    condition {
-      test     = "StringNotEquals"
-      variable = "s3:x-amz-server-side-encryption"
-      values   = ["aws:kms"]
-    }
-    condition {
-      test     = "StringNotEquals"
-      variable = "s3:x-amz-server-side-encryption-aws-kms-key-id"
-      values   = [var.kms_key_config.key_arn]
-    }
-    principals {
-      type        = "AWS"
-      identifiers = ["*"]
+  dynamic "statement" {
+    for_each = var.kms_key_config != null ? [1] : []
+    content {
+      sid = "DenyUnEncryptedObjectUploads"
+      actions = [
+        "s3:PutObject",
+      ]
+      effect = "Deny"
+      resources = [
+        aws_s3_bucket.this.arn,
+        "${aws_s3_bucket.this.arn}/*",
+      ]
+      condition {
+        test     = "StringNotEquals"
+        variable = "s3:x-amz-server-side-encryption"
+        values   = ["aws:kms"]
+      }
+      condition {
+        test     = "StringNotEquals"
+        variable = "s3:x-amz-server-side-encryption-aws-kms-key-id"
+        values   = [var.kms_key_config.key_arn]
+      }
+      principals {
+        type        = "AWS"
+        identifiers = ["*"]
+      }
     }
   }
 }
