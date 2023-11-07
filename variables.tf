@@ -1,3 +1,4 @@
+# Variables
 variable "access_log_config" {
   description = "This is the access logging configuration"
   type = object({
